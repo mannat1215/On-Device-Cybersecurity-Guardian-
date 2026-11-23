@@ -1,0 +1,5 @@
+# LLM-Based Cybersecurity Advisory
+
+This module generates human-readable cybersecurity explanations and safety recommendations based on the results of the URL, SMS, and network detection modules.
+
+It includes a locally deployed Llama 3.2 1B Instruct model through ExecuTorch and a rule-based explanation system as a fallback when the LLM is unavailable.
