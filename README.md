@@ -55,6 +55,8 @@ The On-Device Cybersecurity Guardian addresses these requirements through a modu
 
 The main contribution of this project is not simply using machine learning to classify suspicious inputs. It is the integration of multiple detection modules, centralized risk assessment, and local AI-based explanation within a resource-constrained edge device.
 
+LLM Timeout Handling and Graceful Degradation
+The local Llama model may experience delays because inference is performed on Raspberry Pi CPU hardware. To handle this, the system uses a 60-second execution timeout. If the model exceeds this limit, fails, or produces an invalid response, the system automatically switches to a rule-based advisory mechanism. This ensures that users can still receive a cybersecurity explanation without depending entirely on successful LLM execution.
 ### 4.1 Multi-Source Threat Analysis
 
 Instead of analyzing only one type of cybersecurity threat, the system accepts three different categories of inputs:
@@ -104,38 +106,25 @@ This demonstrates the practical use of optimized machine learning and local lang
 The system follows a modular processing architecture.
 
 ```text
-              USER INPUT
-                  |
-       +----------+----------+
-       |          |          |
-      SMS        URL      NETWORK
-       |          |       RECORD
-       v          v          v
-  SMS DETECTOR  URL       NETWORK
-              DETECTOR   DETECTOR
-       |          |          |
-       +----------+----------+
-                  |
-                  v
-           THREAT FUSION
-                  |
-          OVERALL RISK
-                  |
-                  v
-          LOCAL LLAMA LLM
-                  |
-          +-------+-------+
-          |               |
-      Valid Output     Failure /
-          |            Invalid Output
-          |               |
-          |               v
-          |        RULE-BASED FALLBACK
-          |               |
-          +-------+-------+
-                  |
-                  v
-        CYBERSECURITY ADVISORY
+                     THREAT FUSION
+                |
+                v
+          LOCAL LLAMA
+                |
+        +-------+-------+
+        |               |
+   Valid Response   Timeout /
+        |            Failure /
+        |         Invalid Output
+        |               |
+        |               v
+        |       RULE-BASED ADVISORY
+        |               |
+        +-------+-------+
+                |
+                v
+       FINAL CYBERSECURITY
+             ADVISORY
 ```
 
 ### Processing Flow
@@ -251,13 +240,14 @@ It is used when the LLM cannot successfully generate a valid advisory.
 This reduces dependence on successful LLM execution and allows the application to retain an explanation mechanism even when the local model encounters an error.
 
 ---
-
 ## 7. OPTIMIZATION AND EDGE DEPLOYMENT
 
 A major part of this project involved adapting a language model to run on Raspberry Pi hardware.
 
 A conventional large language model deployment can be computationally expensive for a resource-constrained device. We therefore selected a smaller model and used model quantization and runtime-level configuration to make local inference practical.
 
+Timeout-Based Fallback
+The LLM subprocess is configured with a 60-second timeout. This prevents prolonged inference from blocking the advisory-generation process indefinitely. When the timeout is reached, the application uses the rule-based fallback to generate an alternative explanation.
 ### 7.1 INT4 SpinQuant Quantization
 
 The project uses the Llama 3.2 1B Instruct model in an INT4 SpinQuant-optimized format.
